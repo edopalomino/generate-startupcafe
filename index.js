@@ -268,7 +268,7 @@ async function main() {
   // Usar Gemini para generar título y descripción basados en el guion guardado
   const resumenPrompt = `Tarea Principal
 Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título y una descripción.:
-\${guionTexto}
+${guionTexto}
  
 Requisitos de Formato de Salida:
 1.  JSON Válido y Exclusivo: Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido. No incluyas absolutamente ningún texto antes o después del JSON, ni explicaciones, ni introducciones.
