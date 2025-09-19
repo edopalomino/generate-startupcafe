@@ -298,10 +298,9 @@ Guion:
     model: "gemini-2.5-pro",
     contents: [{ role: "user", parts: [{ text: resumenPrompt }] }],
   });
-  console.log("Titulo y descripion", resumenResp);
-  console.log('Tipo de resumenResp:', typeof resumenResp);
-  const resumenTexto =
-    resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+  let resumenTexto = resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  resumenTexto = resumenTexto.replace(/```json|```/g, '');
   //console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
   const parsed = JSON.parse(resumenTexto);
   let resumenJson = { titulo: parsed.titulo, descripcion: parsed.descripcion };
