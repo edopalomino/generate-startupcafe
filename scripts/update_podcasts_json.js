@@ -12,6 +12,9 @@ const podcastsJsonUrl = 'https://raw.githubusercontent.com/edopalomino/startupsa
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const repoJsonPath = path.resolve(__dirname, '../../startupsandcafe/podcasts.json');
 
+// Asegura que la carpeta exista antes de cualquier operación
+fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
+
 function fetchJson(url) {
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
@@ -39,6 +42,8 @@ async function main() {
     descripcion: description,
     url
   });
+  // Asegura que la carpeta exista antes de escribir el archivo
+  fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
   fs.writeFileSync(repoJsonPath, JSON.stringify(podcasts, null, 2));
   console.log('Nuevo episodio agregado:', { episodio, title, description, url });
 }
