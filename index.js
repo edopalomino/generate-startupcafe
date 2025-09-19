@@ -144,16 +144,16 @@ async function main() {
   const items = await fetchRecentItems();
   if (!items.length) throw new Error('No hay noticias recientes en los feeds configurados.');
   console.log('Generando guion del episodio...');
-    const script = await buildScript(items);
-    // Guardar el guion generado en un archivo temporal
-    const scriptPath = `episode-script-${uuid}.txt`;
-    fs.writeFileSync(scriptPath, script);
-  console.log('Generando audio TTS...');
   const uuid = randomUUID();
+  const script = await buildScript(items);
+  // Guardar el guion generado en un archivo temporal
+  const scriptPath = `episode-script-${uuid}.txt`;
+  fs.writeFileSync(scriptPath, script);
+  console.log('Generando audio TTS...');
   const wavPath = await ttsMultiSpeaker(script, `episode-${uuid}.wav`);
   const dateTag = new Date().toISOString().slice(0,10);
   console.log('Subiendo episodio a Cloudinary...');
-    const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
+  const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
 
     // Usar Gemini para generar título y descripción basados en el guion guardado
     const resumenPrompt = `Dame un título corto (máx 8 palabras) y una descripción de una oración para este episodio de podcast. Responde en JSON con las claves "titulo" y "descripcion". Aquí está el guion:\n${fs.readFileSync(scriptPath, 'utf8')}`;
