@@ -267,15 +267,16 @@ async function main() {
 
   // Usar Gemini para generar título y descripción basados en el guion guardado
   const resumenPrompt = `Tarea Principal
-Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título y una descripción.
-
+Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título y una descripción.:
+\${guionTexto}
+ 
 Requisitos de Formato de Salida:
 1.  JSON Válido y Exclusivo: Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido. No incluyas absolutamente ningún texto antes o después del JSON, ni explicaciones, ni introducciones.
 2.  Sin Markdown: No uses el formato de bloque de código \`\`\`json. La respuesta debe empezar directamente con el carácter { y terminar con el carácter }.
 3.  Claves Específicas: El objeto JSON debe contener exactamente dos claves: titulo y descripcion.
 
 Requisitos de Contenido:
-1.  Título: Un título corto, atractivo y orientado al marketing (máximo 8 palabras).
+1.  Título: Un título corto, atractivo y orientado (máximo 8 palabras).
 2.  Descripción: Un resumen conciso del episodio en una sola oración y en tercera persona.
 
 Ejemplo:
@@ -289,10 +290,7 @@ Resultado esperado (JSON exacto):
 }
 
 Tu Guion a Procesar:
-A continuación, genera el objeto JSON para el siguiente guion:
-
-Guion:
-\${guionTexto}`;
+A continuación, genera el objeto JSON con el guion que se te proporciono`;
   //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
     model: "gemini-2.5-pro",
