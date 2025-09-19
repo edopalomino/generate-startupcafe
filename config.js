@@ -4,7 +4,12 @@ export const RSS_FEEDS = [
   'https://contxto.com/es/feed/',
   'https://platzi.com/blog/feed/',
   'https://endeavor.org.mx/feed/',
-  'https://www.entrepreneur.com/es/rss'
+  'https://www.entrepreneur.com/es/rss',
+  'https://techcrunch.com/category/startups/feed/',
+  'https://www.geekwire.com/startups/feed/',
+  'http://feeds.feedburner.com/ElBlogDeJavierMegiasTerol',
+  'https://blog.ycombinator.com/feed/',
+  'https://www.forbes.com/innovation/feed/',
 ];
 
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
