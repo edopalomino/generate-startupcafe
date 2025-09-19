@@ -88,19 +88,33 @@ async function buildScript(stories) {
 Eres el guionista de "Startups y Café", un micro-podcast.
 El objetivo es informar y motivar a emprendedores universitarios y de la comunidad de Chihuahua.
 Escribe una charla natural entre dos anfitriones: Alex (entusiasta, visionario y es Speaker 1) y Eva (analítica, pragmática y es Speaker 2).
-Para que la charla suene más realista, incorpora sonidos vocales naturales como [laughing], [sighing], [clears throat], [hmm...], [uhm...] y [gasp] donde sea contextualmente apropiado para Alex y Eva.
-El tono debe ser informativo, accesible, y motivador, usando lenguaje claro y evitando jerga excesivamente técnica. Asegúrate de que en algunas interacciones haya reflexiones de manera natural sobre lo más importante que se discuta.
+
+Para dar vida a la charla, cada línea de diálogo debe comenzar obligatoriamente con una instrucción de acción o tono entre corchetes (). Estas instrucciones deben ser como indicaciones para un actor de voz, describiendo cómo habla el personaje:
+
+Alex (Speaker 1): Debe sonar entusiasta y visionario, usando acciones como (ej: (lee con energía), (lee proponiendo con optimismo), (rie), (lee en tono visionario), etc.).
+
+Eva (Speaker 2): Debe sonar más analítica y pragmática, usando acciones como (ej: (lee explicando con calma), (lee en tono reflexivo), (lee cuestionando con interés), (lee puntualizando), etc.).
+
+Adicionalmente, para que suene más realista, puedes insertar sonidos vocales entre los textos cuando sea necesario. Usa específicamente: (riendo), (suspira), (aclara la garganta), (mmm...), (ehm...) y (sorpresa).
+
+El tono general debe ser informativo, accesible y motivador, usando lenguaje claro y evitando jerga excesivamente técnica. Asegúrate de que en algunas interacciones haya reflexiones de manera natural sobre lo más importante que se discuta.
+
 Reglas ESTRICTAS de formato de salida:
 
-La salida debe contener únicamente líneas que comiencen con “Speaker 1:” o “Speaker 2:”. No incluyas ningún otro texto.
-La primera línea debe ser exactamente:
-Charla natural entre dos anfitriones: Alex (entusiasta, visionario y es Speaker 1) y Eva (analítica, pragmática y es Speaker 2).
-El tono debe ser informativo, accesible, y motivador, usando lenguaje claro y evitando jerga excesivamente técnica.
-Speaker 1: ¡Qué tal, comunidad emprendedora! Bienvenidos a un nuevo episodio de Startups y Café.
-No uses acotaciones, efectos de sonido, notas, encabezados, emojis o cualquier texto que no sea parte del diálogo.
-La última línea debe ser una despedida clara, por ejemplo:
-Speaker 2: Gracias por acompañarnos. ¡Nos escuchamos en el próximo episodio con más del mundo de la innovación!
-Aquí están las noticias de esta semana para discutir (título + resumen):
+La salida debe contener únicamente líneas que comiencen con Speaker 1: o Speaker 2:. No incluyas ningún otro texto, encabezados, títulos ni descripciones.
+
+Cada línea debe seguir el formato exacto: Speaker #: (acción o tono) Texto del diálogo.
+
+La primera línea del diálogo debe ser exactamente:
+Haz lo que indica entre los () que sea un español mexicano de Chihuahua 
+Speaker 1: (exclamando con energía) ¡Qué tal, comunidad emprendedora! Bienvenidos a un nuevo episodio de Startups y Café.
+
+Además de la instrucción inicial, puedes y debes insertar los sonidos vocales ((riendo), (suspira), (ehm...), etc.) en medio del diálogo para aumentar el realismo.
+
+La última línea debe ser una despedida clara, siguiendo el formato. Por ejemplo:
+Speaker 2: (despidiéndose con calidez) Gracias por acompañarnos. ¡Nos escuchamos en el próximo episodio con más del mundo de la innovación!
+
+Aquí están los temas de esta semana para discutir:
 ${enriched.map((s, i) => `[${i + 1}] ${s.title}\n${s.body || ""}`).join("\n\n")}
 `;
 
