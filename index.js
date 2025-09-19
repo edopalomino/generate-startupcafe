@@ -298,7 +298,7 @@ Guion:
     model: "gemini-2.5-pro",
     contents: [{ role: "user", parts: [{ text: resumenPrompt }] }],
   });
-  resumenResp = resumenResp.replaceAll('```json', '').replaceAll('```', '');
+  resumenResp = resumenResp.replace(/```json|```/g, '');
   const resumenTexto =
     resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || "";
   //console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
