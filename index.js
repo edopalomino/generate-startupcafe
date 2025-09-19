@@ -199,7 +199,7 @@ async function main() {
   fs.unlinkSync(tempJsonPath);
   fs.unlinkSync(scriptPath);
 
-  console.log('Publicado en:', tootUrl);
+  //console.log('Publicado en:', tootUrl);
   process.exit(0); // Finaliza el proceso exitosamente
 }
 
