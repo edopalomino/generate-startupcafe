@@ -46,17 +46,19 @@ jobs:
 
       - name: Mover, commitear y pushear a startupsandcafe
         run: |
-          # 1. Clona el repositorio de destino en un directorio temporal
+          # 1. Asegura que el directorio de destino esté limpio (¡la solución!)
+          rm -rf ../startupsandcafe
+
+          # 2. Clona el repositorio de destino
           git clone https://github.com/edopalomino/startupsandcafe.git ../startupsandcafe
 
-          # 2. Mueve el archivo generado al repositorio de destino
-          # ¡Este es el paso clave que faltaba!
+          # 3. Mueve el archivo generado al repositorio de destino
           mv podcasts.json ../startupsandcafe/
 
-          # 3. Entra al directorio del repositorio de destino
+          # 4. Entra al directorio del repositorio de destino
           cd ../startupsandcafe
 
-          # 4. Configura git, haz commit y push
+          # 5. Configura git, haz commit y push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add podcasts.json
