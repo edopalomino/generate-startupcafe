@@ -10,7 +10,7 @@ import { createRestAPIClient } from 'masto';
 import { randomUUID } from 'crypto';
 import { RSS_FEEDS, GEMINI_API_KEY, CLOUDINARY_CONFIG, MASTODON_CONFIG } from './config.js';
 
-const parser = new RSSPasrser();
+const parser = new RSSParser();
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Cloudinary
