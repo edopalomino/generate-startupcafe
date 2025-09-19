@@ -40,10 +40,7 @@ jobs:
 
       - name: Eliminar startupsandcafe si existe
         run: rm -rf ../startupsandcafe
-
-      - name: Clonar startupsandcafe
-        run: git clone https://github.com/edopalomino/startupsandcafe.git ../startupsandcafe
-
+        
       - name: Mover, commitear y pushear a startupsandcafe
         run: |
           # 1. Asegura que el directorio de destino esté limpio (¡la solución!)
