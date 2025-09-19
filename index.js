@@ -266,11 +266,33 @@ async function main() {
   const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
 
   // Usar Gemini para generar título y descripción basados en el guion guardado
-  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto y de marketing (máximo 8 palabras) y una descripción de una oración en primera persona.
+  const resumenPrompt = `Tarea Principal
+Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título y una descripción.
 
-Tu respuesta debe ser únicamente un objeto JSON válido, sin ningún texto adicional. Las claves deben ser "titulo" y "descripcion".
+Requisitos de Formato de Salida:
+1.  JSON Válido y Exclusivo: Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido. No incluyas absolutamente ningún texto antes o después del JSON, ni explicaciones, ni introducciones.
+2.  Sin Markdown: No uses el formato de bloque de código \`\`\`json. La respuesta debe empezar directamente con el carácter { y terminar con el carácter }.
+3.  Claves Específicas: El objeto JSON debe contener exactamente dos claves: titulo y descripcion.
 
-No incluyas explicaciones, texto introductorio, ni el formato Markdown \`\`\`json. Tu respuesta debe comenzar con el carácter \`{\` y terminar con el carácter \`}\`. \n\nGuion:\n${guionTexto}`;
+Requisitos de Contenido:
+1.  Título: Un título corto, atractivo y orientado al marketing (máximo 8 palabras).
+2.  Descripción: Un resumen conciso del episodio en una sola oración y en tercera persona.
+
+Ejemplo:
+Guion de entrada:
+"(Intro musical) Bienvenidos a 'Negocios del Futuro'. Hoy exploramos un tema fascinante: la eficiencia. En México, muchas empresas, desde startups hasta escuelas, enfrentan retos operativos. Hablaremos con un emprendedor que creó una solución FinTech para administrar pagos escolares, eliminando dolores de cabeza para los padres. También analizaremos cómo la inteligencia artificial ya no es ciencia ficción, sino una herramienta real para automatizar procesos y abrir puertas a modelos de negocio que antes eran impensables. Quédense para descubrir cómo la tecnología está resolviendo problemas reales y generando nuevas oportunidades."
+
+Resultado esperado (JSON exacto):
+{
+    "titulo": "Eficiencia, IA y Nuevos Negocios",
+    "descripcion": "Este episodio explora cómo la tecnología, desde la inteligencia artificial hasta las soluciones FinTech para escuelas, está creando nuevas oportunidades de negocio en México al enfocarse en la eficiencia y la resolución de problemas operativos."
+}
+
+Tu Guion a Procesar:
+A continuación, genera el objeto JSON para el siguiente guion:
+
+Guion:
+\${guionTexto}`;
   //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
     model: "gemini-2.5-pro",
