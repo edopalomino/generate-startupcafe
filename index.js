@@ -293,11 +293,12 @@ A continuación, genera el objeto JSON para el siguiente guion:
 
 Guion:
 \${guionTexto}`;
-  //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
+  console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
     model: "gemini-2.5-pro",
     contents: [{ role: "user", parts: [{ text: resumenPrompt }] }],
   });
+  resumenResp = resumenResp.replaceAll('```json', '').replaceAll('```', '');
   const resumenTexto =
     resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || "";
   //console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
