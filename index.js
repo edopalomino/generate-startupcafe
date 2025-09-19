@@ -117,12 +117,13 @@ Speaker 2: (despidiéndose con calidez) Gracias por acompañarnos. ¡Nos escucha
 Aquí están los temas de esta semana para discutir:
 ${enriched.map((s, i) => `[${i + 1}] ${s.title}\n${s.body || ""}`).join("\n\n")}
 `;
-
+  
   const resp = await ai.models.generateContent({
     model: "gemini-2.5-pro", // calidad para escritura
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
-  return resp.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const instruction = "Haz lo que indica entre los () que sea un español mexicano de Chihuahua" + resp.candidates?.[0]?.content?.parts?.[0]?.text;
+  return  instruction || "";
 }
 
 async function ttsMultiSpeaker(scriptText, outFile = "episode.wav") {
