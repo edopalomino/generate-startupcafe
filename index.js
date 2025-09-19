@@ -13,7 +13,8 @@ import cloudinaryLib from 'cloudinary';
 import { createRestAPIClient } from 'masto';
 import { randomUUID } from 'crypto';
 import { RSS_FEEDS, GEMINI_API_KEY, CLOUDINARY_CONFIG, MASTODON_CONFIG } from './config.js';
-import { execSync } from 'child_process';
+import path from 'path';
+import https from 'https';
 
 const parser = new RSSParser();
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -144,6 +145,53 @@ async function postToMastodon(text, url) {
   return status.url;
 }
 
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(JSON.parse(data)));
+    }).on('error', reject);
+  });
+}
+
+async function updatePodcastsJson(metaPath) {
+  // Leer datos del episodio desde un JSON temporal
+  if (!metaPath) throw new Error('Falta EPISODE_META_JSON');
+  const { url, titulo: title, descripcion: description } = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  const podcastsJsonUrl = 'https://raw.githubusercontent.com/edopalomino/startupsandcafe/refs/heads/main/podcasts.json';
+
+  // Usar la ruta correcta al archivo podcasts.json dentro del repo clonado
+  const __dirname = path.dirname(new URL(import.meta.url).pathname);
+  const repoJsonPath = path.resolve(__dirname, '../../startupsandcafe/podcasts.json');
+
+  // Asegura que la carpeta exista antes de cualquier operación
+  fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
+
+  let podcasts = [];
+  try {
+    podcasts = await fetchJson(podcastsJsonUrl);
+  } catch (e) {
+    // Si falla, intenta leer el archivo del repo clonado
+    if (fs.existsSync(repoJsonPath)) {
+      podcasts = JSON.parse(fs.readFileSync(repoJsonPath, 'utf8'));
+    }
+  }
+  
+  const episodio = podcasts.length ? Math.max(...podcasts.map(e => e.episodio)) + 1 : 1;
+  podcasts.push({
+    episodio,
+    titulo: title,
+    descripcion: description,
+    url
+  });
+  
+  // Asegura que la carpeta exista antes de escribir el archivo
+  fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
+  fs.writeFileSync(repoJsonPath, JSON.stringify(podcasts, null, 2));
+  console.log('Nuevo episodio agregado:', { episodio, title, description, url });
+}
+
 async function main() {
   console.log('Obteniendo noticias recientes...');
   const items = await fetchRecentItems();
@@ -197,11 +245,8 @@ async function main() {
     }, null, 2)
   );
 
-  // Llamar al script para actualizar el JSON
-  execSync(
-    `EPISODE_META_JSON="${tempJsonPath}" node scripts/update_podcasts_json.js`,
-    { stdio: 'inherit' }
-  );
+  // Llamar a la función para actualizar el JSON
+  await updatePodcastsJson(tempJsonPath);
 
   // Elimina el archivo temporal
   //fs.unlinkSync(tempJsonPath);
