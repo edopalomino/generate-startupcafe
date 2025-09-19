@@ -215,7 +215,7 @@ async function main() {
   const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
 
   // Usar Gemini para generar título y descripción basados en el guion guardado
-  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto (máx 8 palabras) y una descripción de una oración. Responde en JSON con las claves "titulo" y "descripcion". No inventes información, usa solo lo que está en el guion no pongas nada de \`\`\`json.\n\nGuion:\n${guionTexto}`;
+  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto markeatable (máx 8 palabras) y una descripción de una oración en primera persona. Responde en JSON con las claves "titulo" y "descripcion". No inventes información, usa solo lo que está en el guion, regresa el json solo entre llaves sin usar markdonw que indique que es un JSON .\n\nGuion:\n${guionTexto}`;
   //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
     model: 'gemini-2.5-pro',
