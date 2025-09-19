@@ -316,7 +316,7 @@ Guion:
   }
 
   // Guardar info en un JSON temporal para que update_podcasts_json.js lo lea
-  const tempJsonPath = `episode-meta-${uuid}.json`;
+  const tempJsonPath = "podcasts.json";
   fs.writeFileSync(
     tempJsonPath,
     JSON.stringify(
