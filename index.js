@@ -233,7 +233,7 @@ async function updatePodcastsJson(metaPath) {
 
   // Asegura que la carpeta exista antes de escribir el archivo
   fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
-  fs.writeFileSync(repoJsonPath, JSON.stringify(podcasts, null, 2));
+  fs.writeFileSync("podcasts.json", JSON.stringify(podcasts, null, 2));
   console.log("Nuevo episodio agregado:", {
     episodio,
     title,
@@ -316,7 +316,7 @@ Guion:
   }
 
   // Guardar info en un JSON temporal para que update_podcasts_json.js lo lea
-  const tempJsonPath = "podcasts.json";
+  const tempJsonPath = "tmp-podcasts.json";
   fs.writeFileSync(
     tempJsonPath,
     JSON.stringify(
