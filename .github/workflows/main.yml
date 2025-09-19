@@ -44,14 +44,6 @@ jobs:
       - name: Clonar startupsandcafe
         run: git clone https://github.com/edopalomino/startupsandcafe.git ../startupsandcafe
 
-      - name: Modificar podcasts.json
-        run: |
-          node scripts/update_podcasts_json.js
-        env:
-          CLOUDINARY_URL: ${{ env.CLOUDINARY_URL }}
-          EPISODE_TITLE: ${{ env.EPISODE_TITLE }}
-          EPISODE_DESCRIPTION: ${{ env.EPISODE_DESCRIPTION }}
-
       - name: Commit y push a startupsandcafe
         run: |
           cd startupsandcafe
