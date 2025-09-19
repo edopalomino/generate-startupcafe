@@ -1,4 +1,8 @@
 import 'dotenv/config';
+// Polyfill fetch para Node.js
+import fetch from 'node-fetch';
+globalThis.fetch = fetch;
+
 import RSSParser from 'rss-parser';
 import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';

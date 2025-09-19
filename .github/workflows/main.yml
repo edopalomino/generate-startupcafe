@@ -39,7 +39,7 @@ jobs:
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
 
       - name: Clonar startupsandcafe
-        run: git clone https://github.com/edopalomino/startupsandcafe.git
+        run: git clone https://github.com/edopalomino/startupsandcafe.git ../startupsandcafe
 
       - name: Modificar podcasts.json
         run: |
