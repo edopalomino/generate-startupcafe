@@ -1,0 +1,59 @@
+name: podcast-semanal
+
+on:
+  schedule:
+    # Lunes 15:20 UTC (≈ 09:20 en America/Chihuahua cuando el desfase es -06)
+    - cron: "20 15 * * 1"
+  # Permite lanzarlo manualmente desde la pestaña "Actions"
+  workflow_dispatch: {}
+
+jobs:
+  build-run:
+    runs-on: ubuntu-latest
+    # Evita que se pisen ejecuciones si una dura mucho
+    concurrency:
+      group: podcast-semanal
+      cancel-in-progress: false
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci || npm i
+
+      - name: Generate & publish episode
+        run: node index.js
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+
+      - name: Clonar startupsandcafe
+        run: git clone https://github.com/edopalomino/startupsandcafe.git
+
+      - name: Modificar podcasts.json
+        run: |
+          node scripts/update_podcasts_json.js
+        env:
+          CLOUDINARY_URL: ${{ env.CLOUDINARY_URL }}
+          EPISODE_TITLE: ${{ env.EPISODE_TITLE }}
+          EPISODE_DESCRIPTION: ${{ env.EPISODE_DESCRIPTION }}
+
+      - name: Commit y push a startupsandcafe
+        run: |
+          cd startupsandcafe
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add podcasts.json
+          git commit -m "Agrega nuevo episodio automáticamente" || echo "Sin cambios para commitear"
+          git push https://x-access-token:${{ secrets.STARTUPS_AND_CAFE_TOKEN }}@github.com/edopalomino/startupsandcafe.git main
