@@ -8,9 +8,9 @@ if (!metaPath) throw new Error('Falta EPISODE_META_JSON');
 const { url, titulo: title, descripcion: description } = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
 const podcastsJsonUrl = 'https://raw.githubusercontent.com/edopalomino/startupsandcafe/refs/heads/main/podcasts.json';
 
-// Reemplaza __dirname por la forma compatible con ES modules:
+// Usar la ruta correcta al archivo podcasts.json dentro del repo clonado
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const localPath = path.join(__dirname, '../startupsandcafe/podcasts.json');
+const repoJsonPath = path.resolve(__dirname, '../../startupsandcafe/podcasts.json');
 
 function fetchJson(url) {
   return new Promise((resolve, reject) => {
@@ -27,9 +27,9 @@ async function main() {
   try {
     podcasts = await fetchJson(podcastsJsonUrl);
   } catch (e) {
-    // Si falla, intenta leer local
-    if (fs.existsSync(localPath)) {
-      podcasts = JSON.parse(fs.readFileSync(localPath, 'utf8'));
+    // Si falla, intenta leer el archivo del repo clonado
+    if (fs.existsSync(repoJsonPath)) {
+      podcasts = JSON.parse(fs.readFileSync(repoJsonPath, 'utf8'));
     }
   }
   const episodio = podcasts.length ? Math.max(...podcasts.map(e => e.episodio)) + 1 : 1;
@@ -39,7 +39,7 @@ async function main() {
     descripcion: description,
     url
   });
-  fs.writeFileSync(localPath, JSON.stringify(podcasts, null, 2));
+  fs.writeFileSync(repoJsonPath, JSON.stringify(podcasts, null, 2));
   console.log('Nuevo episodio agregado:', { episodio, title, description, url });
 }
 
