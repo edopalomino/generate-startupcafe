@@ -293,7 +293,7 @@ Tu Guion a Procesar:
 A continuación, genera el objeto JSON con el guion que se te proporciono`;
   //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
-    model: "gemini-2.5-pro",
+    model: "gemini-2.5-flash",
     contents: [{ role: "user", parts: [{ text: resumenPrompt }] }],
   });
 
