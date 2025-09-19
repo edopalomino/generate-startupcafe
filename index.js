@@ -167,27 +167,35 @@ async function main() {
   const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
 
   // Usar Gemini para generar título y descripción basados en el guion guardado
-  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto (máx 8 palabras) y una descripción de una oración. Responde en JSON con las claves "titulo" y "descripcion". No inventes información, usa solo lo que está en el guion.\n\nGuion:\n${guionTexto}`;
-  console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
+  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto (máx 8 palabras) y una descripción de una oración. Responde en JSON con las claves "titulo" y "descripcion". No inventes información, usa solo lo que está en el guion no pongas nada de \`\`\`json.\n\nGuion:\n${guionTexto}`;
+  //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
     model: 'gemini-2.5-pro',
     contents: [{ role: 'user', parts: [{ text: resumenPrompt }]}],
   });
   const resumenTexto = resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
-  let titulo = `Episodio ${dateTag}`;
-  let descripcion = 'Un episodio más del podcast.';
+  //console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
+  const parsed = JSON.parse(resumenTexto);
+  let resumenJson = { titulo: parsed.titulo, descripcion: parsed.descripcion };
+  console.log('Respuesta de Gemini para título y descripción:\n', resumenTexto);
   try {
-    const resumenJson = JSON.parse(resumenTexto);
-    if (resumenJson.titulo) titulo = resumenJson.titulo;
-    if (resumenJson.descripcion) descripcion = resumenJson.descripcion;
+    resumenJson.titulo = parsed.titulo || resumenJson.titulo;
+    resumenJson.descripcion = parsed.descripcion || resumenJson.descripcion;
+    console.log('Título y descripción parseados:', parsed);
   } catch (e) {
     console.warn('No se pudo parsear el JSON de Gemini, usando valores por defecto.');
   }
 
   // Guardar info en un JSON temporal para que update_podcasts_json.js lo lea
   const tempJsonPath = `episode-meta-${uuid}.json`;
-  fs.writeFileSync(tempJsonPath, JSON.stringify({ url: cdnUrl, titulo, descripcion, guion: guionTexto }, null, 2));
+  fs.writeFileSync(
+    tempJsonPath,
+    JSON.stringify({
+      url: cdnUrl,
+      titulo: resumenJson.titulo,
+      descripcion: resumenJson.descripcion,
+    }, null, 2)
+  );
 
   // Llamar al script para actualizar el JSON
   execSync(
@@ -196,8 +204,8 @@ async function main() {
   );
 
   // Elimina el archivo temporal
-  fs.unlinkSync(tempJsonPath);
-  fs.unlinkSync(scriptPath);
+  //fs.unlinkSync(tempJsonPath);
+  //fs.unlinkSync(scriptPath);
 
   //console.log('Publicado en:', tootUrl);
   process.exit(0); // Finaliza el proceso exitosamente
