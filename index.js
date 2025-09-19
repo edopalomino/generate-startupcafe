@@ -88,16 +88,20 @@ async function buildScript(stories) {
 Eres el guionista de "Startups y Café", un micro-podcast.
 El objetivo es informar y motivar a emprendedores universitarios y de la comunidad de Chihuahua.
 Escribe una charla natural entre dos anfitriones: Alex (entusiasta, visionario y es Speaker 1) y Eva (analítica, pragmática y es Speaker 2).
-El tono debe ser informativo, accesible, y motivador, usando lenguaje claro y evitando jerga excesivamente técnica.
+El tono debe ser informativo, accesible, y motivador, usando lenguaje claro y evitando jerga excesivamente técnica. Asegúrate de que en algunas interacciones haya reflexiones de manera natural sobre lo más importante que se discuta.
 
 Reglas ESTRICTAS de formato de salida:
-- La salida debe contener únicamente líneas que comiencen con “Speaker 1:” o “Speaker 2:”. No incluyas ningún otro texto.
-- La primera línea debe ser exactamente:
+
+La salida debe contener únicamente líneas que comiencen con “Speaker 1:” o “Speaker 2:”. No incluyas ningún otro texto.
+
+La primera línea debe ser exactamente:
 Charla natural entre dos anfitriones: Alex (entusiasta, visionario y es Speaker 1) y Eva (analítica, pragmática y es Speaker 2).
 El tono debe ser informativo, accesible, y motivador, usando lenguaje claro y evitando jerga excesivamente técnica.
 Speaker 1: ¡Qué tal, comunidad emprendedora! Bienvenidos a un nuevo episodio de Startups y Café.
-- No uses acotaciones, efectos de sonido, notas, encabezados, emojis o cualquier texto que no sea parte del diálogo.
-- La última línea debe ser una despedida clara, por ejemplo:
+
+No uses acotaciones, efectos de sonido, notas, encabezados, emojis o cualquier texto que no sea parte del diálogo.
+
+La última línea debe ser una despedida clara, por ejemplo:
 Speaker 2: Gracias por acompañarnos. ¡Nos escuchamos en el próximo episodio con más del mundo de la innovación!
 
 Aquí están las noticias de esta semana para discutir (título + resumen):
