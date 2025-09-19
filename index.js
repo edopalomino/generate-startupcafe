@@ -1,20 +1,25 @@
-import 'dotenv/config';
+import "dotenv/config";
 // Polyfill fetch para Node.js
-import fetch from 'node-fetch';
+import fetch from "node-fetch";
 globalThis.fetch = fetch;
 
-import RSSParser from 'rss-parser';
-import { JSDOM } from 'jsdom';
-import { Readability } from '@mozilla/readability';
-import { GoogleGenAI } from '@google/genai';
-import wav from 'wav';
-import fs from 'fs';
-import cloudinaryLib from 'cloudinary';
-import { createRestAPIClient } from 'masto';
-import { randomUUID } from 'crypto';
-import { RSS_FEEDS, GEMINI_API_KEY, CLOUDINARY_CONFIG, MASTODON_CONFIG } from './config.js';
-import path from 'path';
-import https from 'https';
+import RSSParser from "rss-parser";
+import { JSDOM } from "jsdom";
+import { Readability } from "@mozilla/readability";
+import { GoogleGenAI } from "@google/genai";
+import wav from "wav";
+import fs from "fs";
+import cloudinaryLib from "cloudinary";
+import { createRestAPIClient } from "masto";
+import { randomUUID } from "crypto";
+import {
+  RSS_FEEDS,
+  GEMINI_API_KEY,
+  CLOUDINARY_CONFIG,
+  MASTODON_CONFIG,
+} from "./config.js";
+import path from "path";
+import https from "https";
 
 const parser = new RSSParser();
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -28,18 +33,20 @@ const masto = createRestAPIClient(MASTODON_CONFIG);
 
 // ---- Utils
 const hoursAgo = (h) => Date.now() - h * 3600_000;
-const uniqueby = (arr, key) => [...new Map(arr.map(x => [key(x), x])).values()];
+const uniqueby = (arr, key) => [
+  ...new Map(arr.map((x) => [key(x), x])).values(),
+];
 
 async function extractArticleText(url) {
   try {
-    const res = await fetch(url, { redirect: 'follow' });
+    const res = await fetch(url, { redirect: "follow" });
     const html = await res.text();
     const dom = new JSDOM(html, { url });
     const reader = new Readability(dom.window.document);
     const article = reader.parse();
-    return article?.textContent?.trim() || '';
+    return article?.textContent?.trim() || "";
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -51,20 +58,30 @@ async function fetchRecentItems() {
       const r = await parser.parseURL(feed);
       for (const it of r.items ?? []) {
         const pub = it.isoDate ? new Date(it.isoDate).getTime() : Date.now();
-        if (pub >= cutoff) items.push({ title: it.title, link: it.link, summary: it.contentSnippet });
+        if (pub >= cutoff)
+          items.push({
+            title: it.title,
+            link: it.link,
+            summary: it.contentSnippet,
+          });
       }
-    } catch { /* ignore feed errors */ }
+    } catch {
+      /* ignore feed errors */
+    }
   }
   // Dedupe por título o URL
-  return uniqueby(items, x => x.link || x.title).slice(0, 6);
+  return uniqueby(items, (x) => x.link || x.title).slice(0, 6);
 }
 
 async function buildScript(stories) {
   // Enriquecer con texto del artículo si hace falta
   const enriched = [];
   for (const s of stories) {
-    const body = s.summary && s.summary.length > 200 ? s.summary : await extractArticleText(s.link);
-    enriched.push({ ...s, body: (body || '').slice(0, 4000) });
+    const body =
+      s.summary && s.summary.length > 200
+        ? s.summary
+        : await extractArticleText(s.link);
+    enriched.push({ ...s, body: (body || "").slice(0, 4000) });
   }
 
   const prompt = `
@@ -84,28 +101,40 @@ Speaker 1: ¡Qué tal, comunidad emprendedora! Bienvenidos a un nuevo episodio d
 Speaker 2: Gracias por acompañarnos. ¡Nos escuchamos en el próximo episodio con más del mundo de la innovación!
 
 Aquí están las noticias de esta semana para discutir (título + resumen):
-${enriched.map((s,i)=>`[${i+1}] ${s.title}\n${s.body || ''}`).join('\n\n')}
+${enriched.map((s, i) => `[${i + 1}] ${s.title}\n${s.body || ""}`).join("\n\n")}
 `;
 
   const resp = await ai.models.generateContent({
-    model: 'gemini-2.5-pro',  // calidad para escritura
-    contents: [{ role: 'user', parts: [{ text: prompt }]}],
+    model: "gemini-2.5-pro", // calidad para escritura
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
-    return resp.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return resp.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
 
-async function ttsMultiSpeaker(scriptText, outFile='episode.wav') {
+async function ttsMultiSpeaker(scriptText, outFile = "episode.wav") {
   // El modelo TTS entrega PCM 24k; lo guardamos a WAV.
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-preview-tts',
-    contents: [{ parts: [{ text: `TTS esta conversación entre Alex y Eva:\n${scriptText}` }]}],
+    model: "gemini-2.5-flash-preview-tts",
+    contents: [
+      {
+        parts: [
+          { text: `TTS esta conversación entre Alex y Eva:\n${scriptText}` },
+        ],
+      },
+    ],
     config: {
-      responseModalities: ['AUDIO'],
+      responseModalities: ["AUDIO"],
       speechConfig: {
         multiSpeakerVoiceConfig: {
           speakerVoiceConfigs: [
-            { speaker: 'Alex', voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
-            { speaker: 'Eva',  voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
+            {
+              speaker: "Alex",
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } },
+            },
+            {
+              speaker: "Eva",
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
+            },
           ],
         },
       },
@@ -113,12 +142,16 @@ async function ttsMultiSpeaker(scriptText, outFile='episode.wav') {
   });
 
   const b64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  const pcm = Buffer.from(b64, 'base64');
+  const pcm = Buffer.from(b64, "base64");
 
   await new Promise((resolve, reject) => {
-    const writer = new wav.FileWriter(outFile, { channels: 1, sampleRate: 24000, bitDepth: 16 });
-    writer.on('finish', resolve);
-    writer.on('error', reject);
+    const writer = new wav.FileWriter(outFile, {
+      channels: 1,
+      sampleRate: 24000,
+      bitDepth: 16,
+    });
+    writer.on("finish", resolve);
+    writer.on("error", reject);
     writer.write(pcm);
     writer.end();
   });
@@ -129,8 +162,8 @@ async function ttsMultiSpeaker(scriptText, outFile='episode.wav') {
 async function uploadToCloudinary(filepath, publicId) {
   // Audio se sube como resource_type "video"
   const res = await cloudinary.uploader.upload(filepath, {
-    resource_type: 'video',
-    folder: 'super-happy-dev',
+    resource_type: "video",
+    folder: "super-happy-dev",
     public_id: publicId,
     overwrite: true,
   });
@@ -140,30 +173,40 @@ async function uploadToCloudinary(filepath, publicId) {
 async function postToMastodon(text, url) {
   const status = await masto.v1.statuses.create({
     status: `${text}\n\nEscúchalo aquí: ${url}`,
-    visibility: 'public',
+    visibility: "public",
   });
   return status.url;
 }
 
 function fetchJson(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve(JSON.parse(data)));
-    }).on('error', reject);
+    https
+      .get(url, (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => resolve(JSON.parse(data)));
+      })
+      .on("error", reject);
   });
 }
 
 async function updatePodcastsJson(metaPath) {
   // Leer datos del episodio desde un JSON temporal
-  if (!metaPath) throw new Error('Falta EPISODE_META_JSON');
-  const { url, titulo: title, descripcion: description } = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-  const podcastsJsonUrl = 'https://raw.githubusercontent.com/edopalomino/startupsandcafe/refs/heads/main/podcasts.json';
+  if (!metaPath) throw new Error("Falta EPISODE_META_JSON");
+  const {
+    url,
+    titulo: title,
+    descripcion: description,
+  } = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+  const podcastsJsonUrl =
+    "https://raw.githubusercontent.com/edopalomino/startupsandcafe/refs/heads/main/podcasts.json";
 
   // Usar la ruta correcta al archivo podcasts.json dentro del repo clonado
   const __dirname = path.dirname(new URL(import.meta.url).pathname);
-  const repoJsonPath = path.resolve(__dirname, '../../startupsandcafe/podcasts.json');
+  const repoJsonPath = path.resolve(
+    __dirname,
+    "../../startupsandcafe/podcasts.json"
+  );
 
   // Asegura que la carpeta exista antes de cualquier operación
   fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
@@ -174,75 +217,94 @@ async function updatePodcastsJson(metaPath) {
   } catch (e) {
     // Si falla, intenta leer el archivo del repo clonado
     if (fs.existsSync(repoJsonPath)) {
-      podcasts = JSON.parse(fs.readFileSync(repoJsonPath, 'utf8'));
+      podcasts = JSON.parse(fs.readFileSync(repoJsonPath, "utf8"));
     }
   }
-  
-  const episodio = podcasts.length ? Math.max(...podcasts.map(e => e.episodio)) + 1 : 1;
+
+  const episodio = podcasts.length
+    ? Math.max(...podcasts.map((e) => e.episodio)) + 1
+    : 1;
   podcasts.push({
     episodio,
     titulo: title,
     descripcion: description,
-    url
+    url,
   });
-  
+
   // Asegura que la carpeta exista antes de escribir el archivo
   fs.mkdirSync(path.dirname(repoJsonPath), { recursive: true });
   fs.writeFileSync(repoJsonPath, JSON.stringify(podcasts, null, 2));
-  console.log('Nuevo episodio agregado:', { episodio, title, description, url });
+  console.log("Nuevo episodio agregado:", {
+    episodio,
+    title,
+    description,
+    url,
+  });
 }
 
 async function main() {
-  console.log('Obteniendo noticias recientes...');
+  console.log("Obteniendo noticias recientes...");
   const items = await fetchRecentItems();
-  if (!items.length) throw new Error('No hay noticias recientes en los feeds configurados.');
-  console.log('Generando guion del episodio...');
+  if (!items.length)
+    throw new Error("No hay noticias recientes en los feeds configurados.");
+  console.log("Generando guion del episodio...");
   const uuid = randomUUID();
   const script = await buildScript(items);
   // Guardar el guion generado en un archivo temporal
   const scriptPath = `episode-script-${uuid}.txt`;
   fs.writeFileSync(scriptPath, script);
   // Validar que el guion no esté vacío
-  const guionTexto = fs.readFileSync(scriptPath, 'utf8').trim();
+  const guionTexto = fs.readFileSync(scriptPath, "utf8").trim();
   if (!guionTexto) {
-    throw new Error('El guion generado está vacío. No se puede continuar.');
+    throw new Error("El guion generado está vacío. No se puede continuar.");
   }
-  console.log('Guion generado para el episodio:\n', guionTexto);
-  console.log('Generando audio TTS...');
+  console.log("Guion generado para el episodio:\n", guionTexto);
+  console.log("Generando audio TTS...");
   const wavPath = await ttsMultiSpeaker(script, `episode-${uuid}.wav`);
-  const dateTag = new Date().toISOString().slice(0,10);
-  console.log('Subiendo episodio a Cloudinary...');
+  const dateTag = new Date().toISOString().slice(0, 10);
+  console.log("Subiendo episodio a Cloudinary...");
   const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
 
   // Usar Gemini para generar título y descripción basados en el guion guardado
-  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto markeatable (máx 8 palabras) y una descripción de una oración en primera persona. Responde en JSON con las claves "titulo" y "descripcion". No inventes información, usa solo lo que está en el guion, regresa el json solo entre llaves sin usar markdonw que indique que es un JSON .\n\nGuion:\n${guionTexto}`;
+  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto y de marketing (máximo 8 palabras) y una descripción de una oración en primera persona.
+
+Tu respuesta debe ser únicamente un objeto JSON válido, sin ningún texto adicional. Las claves deben ser "titulo" y "descripcion".
+
+No incluyas explicaciones, texto introductorio, ni el formato Markdown \`\`\`json. Tu respuesta debe comenzar con el carácter \`{\` y terminar con el carácter \`}\`. \n\nGuion:\n${guionTexto}`;
   //console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
   const resumenResp = await ai.models.generateContent({
-    model: 'gemini-2.5-pro',
-    contents: [{ role: 'user', parts: [{ text: resumenPrompt }]}],
+    model: "gemini-2.5-pro",
+    contents: [{ role: "user", parts: [{ text: resumenPrompt }] }],
   });
-  const resumenTexto = resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const resumenTexto =
+    resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || "";
   //console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
   const parsed = JSON.parse(resumenTexto);
   let resumenJson = { titulo: parsed.titulo, descripcion: parsed.descripcion };
-  console.log('Respuesta de Gemini para título y descripción:\n', resumenTexto);
+  console.log("Respuesta de Gemini para título y descripción:\n", resumenTexto);
   try {
     resumenJson.titulo = parsed.titulo || resumenJson.titulo;
     resumenJson.descripcion = parsed.descripcion || resumenJson.descripcion;
-    console.log('Título y descripción parseados:', parsed);
+    console.log("Título y descripción parseados:", parsed);
   } catch (e) {
-    console.warn('No se pudo parsear el JSON de Gemini, usando valores por defecto.');
+    console.warn(
+      "No se pudo parsear el JSON de Gemini, usando valores por defecto."
+    );
   }
 
   // Guardar info en un JSON temporal para que update_podcasts_json.js lo lea
   const tempJsonPath = `episode-meta-${uuid}.json`;
   fs.writeFileSync(
     tempJsonPath,
-    JSON.stringify({
-      url: cdnUrl,
-      titulo: resumenJson.titulo,
-      descripcion: resumenJson.descripcion,
-    }, null, 2)
+    JSON.stringify(
+      {
+        url: cdnUrl,
+        titulo: resumenJson.titulo,
+        descripcion: resumenJson.descripcion,
+      },
+      null,
+      2
+    )
   );
 
   // Llamar a la función para actualizar el JSON
@@ -256,4 +318,7 @@ async function main() {
   process.exit(0); // Finaliza el proceso exitosamente
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
