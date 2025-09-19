@@ -1,14 +1,15 @@
-
 import 'dotenv/config';
 import RSSParser from 'rss-parser';
 import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 import { GoogleGenAI } from '@google/genai';
 import wav from 'wav';
+import fs from 'fs';
 import cloudinaryLib from 'cloudinary';
 import { createRestAPIClient } from 'masto';
 import { randomUUID } from 'crypto';
 import { RSS_FEEDS, GEMINI_API_KEY, CLOUDINARY_CONFIG, MASTODON_CONFIG } from './config.js';
+import { execSync } from 'child_process';
 
 const parser = new RSSParser();
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -149,39 +150,50 @@ async function main() {
   // Guardar el guion generado en un archivo temporal
   const scriptPath = `episode-script-${uuid}.txt`;
   fs.writeFileSync(scriptPath, script);
+  // Validar que el guion no esté vacío
+  const guionTexto = fs.readFileSync(scriptPath, 'utf8').trim();
+  if (!guionTexto) {
+    throw new Error('El guion generado está vacío. No se puede continuar.');
+  }
+  console.log('Guion generado para el episodio:\n', guionTexto);
   console.log('Generando audio TTS...');
   const wavPath = await ttsMultiSpeaker(script, `episode-${uuid}.wav`);
   const dateTag = new Date().toISOString().slice(0,10);
   console.log('Subiendo episodio a Cloudinary...');
   const cdnUrl = await uploadToCloudinary(wavPath, `shd-${dateTag}-${uuid}`);
 
-    // Usar Gemini para generar título y descripción basados en el guion guardado
-    const resumenPrompt = `Dame un título corto (máx 8 palabras) y una descripción de una oración para este episodio de podcast. Responde en JSON con las claves "titulo" y "descripcion". Aquí está el guion:\n${fs.readFileSync(scriptPath, 'utf8')}`;
-    const resumenResp = await ai.models.generateContent({
-      model: 'gemini-2.5-pro',
-      contents: [{ role: 'user', parts: [{ text: resumenPrompt }]}],
-    });
-    let titulo = `Episodio ${dateTag}`;
-    let descripcion = 'Un episodio más del podcast.';
-    try {
-      const resumenJson = JSON.parse(resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
-      if (resumenJson.titulo) titulo = resumenJson.titulo;
-      if (resumenJson.descripcion) descripcion = resumenJson.descripcion;
-    } catch {}
+  // Usar Gemini para generar título y descripción basados en el guion guardado
+  const resumenPrompt = `Lee el siguiente guion de podcast y, basándote únicamente en su contenido, genera un título corto (máx 8 palabras) y una descripción de una oración. Responde en JSON con las claves "titulo" y "descripcion". No inventes información, usa solo lo que está en el guion.\n\nGuion:\n${guionTexto}`;
+  console.log('Prompt enviado a Gemini para título y descripción:\n', resumenPrompt);
+  const resumenResp = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: [{ role: 'user', parts: [{ text: resumenPrompt }]}],
+  });
+  const resumenTexto = resumenResp.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  console.log('Respuesta cruda de Gemini para título y descripción:\n', resumenTexto);
+  let titulo = `Episodio ${dateTag}`;
+  let descripcion = 'Un episodio más del podcast.';
+  try {
+    const resumenJson = JSON.parse(resumenTexto);
+    if (resumenJson.titulo) titulo = resumenJson.titulo;
+    if (resumenJson.descripcion) descripcion = resumenJson.descripcion;
+  } catch (e) {
+    console.warn('No se pudo parsear el JSON de Gemini, usando valores por defecto.');
+  }
 
-    // Guardar info en un JSON temporal para que update_podcasts_json.js lo lea
-    const tempJsonPath = `episode-meta-${uuid}.json`;
-    fs.writeFileSync(tempJsonPath, JSON.stringify({ url: cdnUrl, titulo, descripcion, guion: fs.readFileSync(scriptPath, 'utf8') }, null, 2));
+  // Guardar info en un JSON temporal para que update_podcasts_json.js lo lea
+  const tempJsonPath = `episode-meta-${uuid}.json`;
+  fs.writeFileSync(tempJsonPath, JSON.stringify({ url: cdnUrl, titulo, descripcion, guion: guionTexto }, null, 2));
 
-    // Llamar al script para actualizar el JSON
-    execSync(
-      `EPISODE_META_JSON="${tempJsonPath}" node scripts/update_podcasts_json.js`,
-      { stdio: 'inherit' }
-    );
+  // Llamar al script para actualizar el JSON
+  execSync(
+    `EPISODE_META_JSON="${tempJsonPath}" node scripts/update_podcasts_json.js`,
+    { stdio: 'inherit' }
+  );
 
-    // Elimina el archivo temporal
-    fs.unlinkSync(tempJsonPath);
-    fs.unlinkSync(scriptPath);
+  // Elimina el archivo temporal
+  fs.unlinkSync(tempJsonPath);
+  fs.unlinkSync(scriptPath);
 
   console.log('Publicado en:', tootUrl);
   process.exit(0); // Finaliza el proceso exitosamente
